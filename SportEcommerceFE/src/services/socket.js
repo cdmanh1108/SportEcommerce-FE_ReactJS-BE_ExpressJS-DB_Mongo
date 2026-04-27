@@ -1,8 +1,8 @@
 import { io } from "socket.io-client";
 
-// Lấy API URL (cắt bỏ phần /api nếu có để lấy domain gốc)
+// Lấy API URL (cắt bỏ phần /api ở cuối nếu có để lấy domain gốc)
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const SOCKET_URL = API_URL.replace("/api", "");
+const SOCKET_URL = API_URL.replace(/\/api\/?$/, "");
 
 let socket = null;
 
