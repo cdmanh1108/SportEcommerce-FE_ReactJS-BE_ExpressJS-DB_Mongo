@@ -1,12 +1,17 @@
 import { createContext, useEffect, useState, useContext } from "react";
 import { getUserNotifications } from "../services/api/NotificationApi";
 import { useAuth } from "./AuthContext";
-// NotificationContext.jsx
+import { useUser } from "./UserContext";
+import { initSocket, disconnectSocket } from "../services/socket";
+import { usePopup } from "./PopupContext";
+
 const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const { token } = useAuth();
+  const { selectedUser } = useUser();
+  const { showPopup } = usePopup();
 
   const fetchNotifications = async () => {
     const res = await getUserNotifications();
@@ -16,17 +21,37 @@ export const NotificationProvider = ({ children }) => {
   };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      disconnectSocket();
+      return;
+    }
+    
     // Gọi API ngay lần đầu
     fetchNotifications();
-    // Gọi API mỗi 30 giây
-    const interval = setInterval(() => {
-      fetchNotifications();
-    }, 30000);
-    // Cleanup khi unmount hoặc token đổi
-    return () => clearInterval(interval);
+
+    // Khởi tạo socket
+    const socket = initSocket();
+
+    // Lắng nghe sự kiện newNotification
+    const handleNewNotification = (newNotification) => {
+      setNotifications((prev) => [newNotification, ...prev]);
+      showPopup(newNotification.notify_title || "Bạn có thông báo mới!", true);
+    };
+
+    socket.on("newNotification", handleNewNotification);
+
+    return () => {
+      socket.off("newNotification", handleNewNotification);
+    };
   }, [token]);
+
+  useEffect(() => {
+    if (selectedUser?._id) {
+      initSocket(selectedUser._id);
+    }
+  }, [selectedUser?._id]);
 
   return (
     <NotificationContext.Provider

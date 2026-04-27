@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import {
@@ -22,7 +22,7 @@ import { IoTrashOutline } from "react-icons/io5";
 import { useCart } from "../../context/CartContext";
 import { useNotifications } from "../../context/NotificationContext";
 import { usePopup } from "../../context/PopupContext";
-import { getChatBotSearch } from "../../services/api/UserApi";
+import { useCategories } from "../../context/CategoriesContext";
 
 const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -42,6 +42,24 @@ const Header = () => {
   const showNotificationDot = unreadCount;
   const { handleLogout } = useAuth();
   const { showPopup } = usePopup();
+  const { categories, fetchCategories } = useCategories();
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const options = categories
+    .filter((c) => !c.category_parent_id)
+    .map((parent) => ({
+      name: parent.category_name,
+      slug: parent.category_slug,
+      subCategories: categories
+        .filter((c) => c.category_parent_id === parent._id)
+        .map((child) => ({
+          name: child.category_name,
+          slug: child.category_slug,
+        })),
+    }));
 
   const toggleSearch = () => {
     setSearchOpen(!searchOpen);
@@ -97,50 +115,32 @@ const Header = () => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      const res = await getChatBotSearch(query);
+      // Save search history
+      if (!token) {
+        let updatedHistory = [
+          query,
+          ...fullSearchHistory.filter((q) => q !== query),
+        ];
+        setFullSearchHistory(updatedHistory);
+        setSearchHistory(updatedHistory.slice(0, 5));
+        localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
+      } else if (selectedUser && selectedUser?.searchhistory) {
+        const newHistoryItem = { message: query, originalIndex: -1 };
+        const updatedHistory = [newHistoryItem, ...fullSearchHistory];
 
-      if (res.EC === 0) {
-        const result = res.result;
+        setFullSearchHistory(updatedHistory);
+        setSearchHistory(updatedHistory.slice(0, 5));
 
-        let parsedResult;
-        try {
-          parsedResult =
-            typeof result === "string" ? JSON.parse(result) : result;
-        } catch {
-          setSearchOpen(!searchOpen);
-          showPopup(res.EM || "Khôngh thể phân tích kết quả tìm kiếm", false);
-          return;
-        }
-
-        // Save search history
-        if (!token) {
-          let updatedHistory = [
-            query,
-            ...fullSearchHistory.filter((q) => q !== query),
-          ];
-          setFullSearchHistory(updatedHistory);
-          setSearchHistory(updatedHistory.slice(0, 5));
-          localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
-        } else if (selectedUser && selectedUser?.searchhistory) {
-          const newHistoryItem = { message: query, originalIndex: -1 };
-          const updatedHistory = [newHistoryItem, ...fullSearchHistory];
-
-          setFullSearchHistory(updatedHistory);
-          setSearchHistory(updatedHistory.slice(0, 5));
-
-          // Refresh user data
-          fetchUser();
-        }
-
-        setSearchOpen(!searchOpen);
-        setDisplayAllHistory(false);
-        const queryString = new URLSearchParams(parsedResult).toString();
-        navigate(`/search?${queryString}`, {
-          state: {
-            result: query,
-          },
-        });
+        // Refresh user data
+        fetchUser();
       }
+
+      setSearchOpen(false);
+      setDisplayAllHistory(false);
+      
+      const params = new URLSearchParams();
+      params.append("search", query);
+      navigate(`/product?${params.toString()}`);
     } catch {
       return;
     }
@@ -203,75 +203,7 @@ const Header = () => {
     return url;
   };
 
-  const options = [
-    {
-      name: "Giày bóng đá",
-      slug: "giay_da_bong",
-      subCategories: [
-        {
-          name: "Giày sân cỏ tự nhiên",
-          slug: "giay_san_co_tu_nhien",
-        },
-        {
-          name: "Giày sân cỏ nhân tạo",
-          slug: "giay_san_co_nhan_tao",
-        },
-        { name: "Giày futsal", slug: "giay_da_bong_futsal" },
-      ],
-    },
-    {
-      name: "Giày chạy bộ",
-      slug: "giay_chay_bo",
-      subCategories: [
-        {
-          name: "Giày chạy hàng ngày",
-          slug: "giay_chay_hang_ngay",
-        },
-        {
-          name: "Giày chạy tốc độ",
-          slug: "giay_chay_toc_do",
-        },
-        {
-          name: "Giày chạy đường dài",
-          slug: "giay_chay_duong_dai",
-        },
-      ],
-    },
-    {
-      name: "Giày bóng rổ",
-      slug: "giay_bong_ro",
-      subCategories: [
-        {
-          name: "Giày bóng rổ trong nhà",
-          slug: "giay_bong_ro_trong_nha",
-        },
-        {
-          name: "Giày bóng rổ ngoài trời",
-          slug: "giay_bong_ro_ngoai_troi",
-        },
-      ],
-    },
-    {
-      name: "Giày cầu lông",
-      slug: "giay_cau_long",
-      subCategories: [],
-    },
-    {
-      name: "Giày bóng chuyền",
-      slug: "giay_bong_chuyen",
-      subCategories: [],
-    },
-    // {
-    //   name: "Gi\u00e0y t\u1eadp luy\u1ec7n",
-    //   slug: "giay_tap_luyen",
-    //   subCategories: [],
-    // },
-    // {
-    //   name: "Gi\u00e0y th\u1eddi trang",
-    //   slug: "giay_thoi_trang",
-    //   subCategories: [],
-    // },
-  ];
+
 
   useEffect(() => {
     if (menuOpen) {

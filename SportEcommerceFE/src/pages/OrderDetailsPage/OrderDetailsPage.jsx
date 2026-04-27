@@ -32,23 +32,23 @@ const OrderDetailsPage = () => {
 
   // Hàm tìm giá variant và hình ảnh dựa vào màu sắc và kích thước
   const findProductDetails = (product) => {
-    const colorOption = product.product_id.colors.find(
-      (c) => c.color_name === product.color
+    const colorOption = product?.product_id?.colors?.find(
+      (c) => c.color_name === product?.color
     );
 
-    let variantPrice = product.product_id.product_price;
-    let productImage = product.product_id.product_img;
+    let variantPrice = product?.product_id?.product_price;
+    let productImage = product?.product_id?.product_img;
 
     if (colorOption) {
-      productImage = colorOption.imgs.img_main;
+      productImage = colorOption?.imgs?.img_main;
 
       // Tìm biến thể tương ứng
-      const variantOption = colorOption.variants.find(
-        (v) => v.variant_size === product.variant
+      const variantOption = colorOption?.variants?.find(
+        (v) => v?.variant_size === product?.variant
       );
 
       if (variantOption) {
-        variantPrice = variantOption.variant_price;
+        variantPrice = variantOption?.variant_price;
       }
     }
 
@@ -112,7 +112,7 @@ const OrderDetailsPage = () => {
             <strong className="text-sm inline-block font-semibold min-w-[100px]">
               Dự kiến giao:{" "}
             </strong>
-            {new Date(orderDetails.estimated_delivery_date).toLocaleDateString(
+            {new Date(orderDetails?.estimated_delivery_date).toLocaleDateString(
               "vi-VN"
             )}
           </p>
@@ -122,18 +122,18 @@ const OrderDetailsPage = () => {
             <strong className="text-sm inline-block font-semibold min-w-[100px]">
               Đã nhận hàng:{" "}
             </strong>
-            {new Date(orderDetails.received_date).toLocaleDateString("vi-VN")}
+            {new Date(orderDetails?.received_date).toLocaleDateString("vi-VN")}
           </p>
         )}
       </div>
       <div className="bg-[#f6f6f6] rounded-lg mb-4 p-5 space-y-2">
         <h3 className="text-lg uppercase font-semibold">Thông tin đơn hàng</h3>
-        {orderDetails?.products.map((product, index) => {
+        {orderDetails?.products?.map((product, index) => {
           const { variantPrice, productImage } = findProductDetails(product);
           const discountedPrice =
-            product.product_id.product_percent_discount > 0
+            product?.product_id?.product_percent_discount > 0
               ? (variantPrice *
-                  (100 - product.product_id.product_percent_discount)) /
+                  (100 - product?.product_id?.product_percent_discount)) /
                 100
               : variantPrice;
 

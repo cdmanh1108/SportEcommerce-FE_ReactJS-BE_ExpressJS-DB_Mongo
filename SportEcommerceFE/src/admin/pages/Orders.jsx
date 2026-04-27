@@ -49,15 +49,17 @@ const Orders = () => {
     } else showPopup(result.EM, false);
   };
 
-  const filteredOrders = ordersState.filter((order) => {
-    const matchesStatus = filterStatus
-      ? order.order_status === filterStatus
-      : true;
-    const matchesSearch = searchText
-      ? order._id.toLowerCase().includes(searchText.toLowerCase())
-      : true;
-    return matchesStatus && matchesSearch;
-  });
+  const filteredOrders = ordersState
+    .filter((order) => {
+      const matchesStatus = filterStatus
+        ? order.order_status === filterStatus
+        : true;
+      const matchesSearch = searchText
+        ? order._id.toLowerCase().includes(searchText.toLowerCase())
+        : true;
+      return matchesStatus && matchesSearch;
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const columns = [
     {

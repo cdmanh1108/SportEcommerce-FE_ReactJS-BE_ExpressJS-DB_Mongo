@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useParams, useSearchParams, useLocation } from "react-router-dom";
 import { usePopup } from "../../context/PopupContext";
 import { handleCancelPayment } from "../../services/api/OrderApi";
+import ConfirmDialogComponent from "../../components/ConfirmDialogComponent/ConfirmDialogComponent";
 
 const shippingMethods = [
   { id: "standard", label: "Giao hàng tiêu chuẩn", price: "50.000 đ" },
@@ -64,6 +65,7 @@ function CheckoutPage() {
     shippingMethods[0].id
   );
   const [selectedPayment, setSelectedPayment] = useState(paymentMethods[0].id);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   useEffect(() => {
     fetchUser();
@@ -313,7 +315,7 @@ function CheckoutPage() {
     return false;
   };
 
-  const CreateOrder = async () => {
+  const handleOrderClick = () => {
     if (!validateAddressBeforeOrder()) {
       showPopup("Vui lòng nhập đầy đủ thông tin địa chỉ giao hàng", false);
       return;
@@ -327,6 +329,12 @@ function CheckoutPage() {
       );
       return;
     }
+
+    setIsConfirmOpen(true);
+  };
+
+  const CreateOrder = async () => {
+    setIsConfirmOpen(false);
     const orderData = {
       shipping_address: selectedAddress || newAddress,
       products: cartItems.map((item) => ({
@@ -417,7 +425,7 @@ function CheckoutPage() {
               cart={cartItems}
               productVouchers={productVouchers}
               shippingVouchers={shippingVouchers}
-              onClick={CreateOrder}
+              onClick={handleOrderClick}
               handleApplyVoucher={handleApplyVoucher}
             />
           </div>
@@ -502,6 +510,13 @@ function CheckoutPage() {
           </div>
         </div>
       </div>
+      <ConfirmDialogComponent
+        open={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={CreateOrder}
+        title="Xác nhận đặt hàng"
+        message="Bạn có chắc chắn muốn tiến hành đặt hàng với các thông tin đã chọn không?"
+      />
     </div>
   );
 }

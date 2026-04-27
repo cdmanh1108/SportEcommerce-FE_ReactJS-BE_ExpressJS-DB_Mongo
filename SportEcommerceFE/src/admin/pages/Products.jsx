@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Table, Input, Select, Button, Modal, Form, InputNumber } from "antd";
 import {
   DeleteOutlined,
@@ -337,7 +337,7 @@ const normalizeKnowledgeChunkPayload = (payload) => {
 };
 
 const Products = () => {
-  const { products, fetchProducts, removeProduct, addProduct, editProduct } =
+  const { products, fetchProducts, removeProduct, addProduct, editProduct, editProductCategory } =
     useProduct();
   const [form] = Form.useForm();
   const [knowledgeChunkForm] = Form.useForm();
@@ -597,6 +597,21 @@ const Products = () => {
     setLoading(false);
   };
 
+  const handleCategoryChange = async (productId, categoryId) => {
+    setLoading(true, "Đang cập nhật danh mục...");
+    try {
+      const res = await editProductCategory(productId, categoryId);
+      if (res?.EC === 0) {
+        showPopup("Cập nhật danh mục thành công");
+      } else {
+        showPopup(res?.EM || "Cập nhật danh mục thất bại", false);
+      }
+    } catch {
+      showPopup("Lỗi cập nhật danh mục", false);
+    }
+    setLoading(false);
+  };
+
   const handleOpenKnowledgeChunkForm = async (record) => {
     setLoading(true, "Đang tạo nháp KnowledgeChunk");
     try {
@@ -733,6 +748,23 @@ const Products = () => {
       ),
     },
     { title: "Tên sản phẩm", dataIndex: "product_title", key: "product_title" },
+    {
+      title: "Danh mục",
+      dataIndex: "product_category",
+      key: "product_category",
+      render: (product_category, record) => {
+        const categoryId = getCategoryId(product_category);
+        return (
+          <Select
+            value={categoryId}
+            onChange={(value) => handleCategoryChange(record._id, value)}
+            style={{ width: 200 }}
+            options={categorySelectOptions}
+            onClick={(e) => e.stopPropagation()}
+          />
+        );
+      },
+    },
     { title: "Thương hiệu", dataIndex: "product_brand", key: "product_brand" },
     {
       title: "Số lượng tồn",

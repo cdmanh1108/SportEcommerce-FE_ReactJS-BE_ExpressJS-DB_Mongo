@@ -1,30 +1,27 @@
-# Stage 1: Build
-FROM node:20-alpine AS build
+# syntax=docker/dockerfile:1.7
+
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json to install dependencies
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Install dependencies
-RUN npm ci
+COPY server.js ./
+COPY src ./src
 
-# Copy the rest of the application code
-COPY . ./
-
-# Stage 2: Run
-FROM node:20-alpine
+FROM node:22-alpine AS runtime
 
 WORKDIR /app
 
-# Copy only the necessary files from the build stage
-COPY --from=build /app ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/server.js ./server.js
+COPY --from=builder /app/src ./src
 
-# Expose the application port
+ENV NODE_ENV=production
+ENV PORT=5000
+
 EXPOSE 5000
 
-# Start the application
-CMD ["npm", "run" , "start"]
-
-
-
+CMD ["node", "server.js"]

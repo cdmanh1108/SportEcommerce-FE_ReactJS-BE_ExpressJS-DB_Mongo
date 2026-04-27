@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import SidebarSortComponent from "../../components/SidebarSortComponent/SidebarSortComponent";
 import ProductComponent from "../../components/ProductComponent/ProductComponent";
 import ButtonComponent from "../../components/ButtonComponent/ButtonComponent";
@@ -12,19 +12,75 @@ import { getFavourite } from "../../services/api/FavouriteApi"; // import API
 import AnimationScroll from "../../components/AnimationScroll/AnimationScroll";
 const ProductPage = () => {
   const location = useLocation();
-  const [selectedFilters, setSelectedFilters] = useState({});
+  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
 
   const category = queryParams.get("category") || "";
   const category_gender = queryParams.get("category_gender") || "";
+  const category_sub = queryParams.get("category_sub") || "";
+  const product_color = queryParams.get("product_color") || "";
+  const product_brand = queryParams.get("product_brand") || "";
+  const search = queryParams.get("search") || "";
+  const price_min = queryParams.get("price_min") || "";
+  const price_max = queryParams.get("price_max") || "";
+
+  const [selectedFilters, setSelectedFilters] = useState(() => ({
+    category: category ? category.split(",") : [],
+    category_gender: category_gender ? category_gender.split(",") : [],
+    category_sub: category_sub ? category_sub.split(",") : [],
+    product_color: product_color ? product_color.split(",") : [],
+    product_brand: product_brand ? product_brand.split(",") : [],
+    price_min,
+    price_max,
+    search: search || undefined,
+  }));
 
   useEffect(() => {
-    setSelectedFilters((prev) => ({
-      ...prev,
-      category: category ? [category] : [],
-      category_gender: category_gender ? [category_gender] : [],
-    }));
-  }, [category, category_gender]);
+    setSelectedFilters((prev) => {
+      const newFilters = {
+        category: category ? category.split(",") : [],
+        category_gender: category_gender ? category_gender.split(",") : [],
+        category_sub: category_sub ? category_sub.split(",") : [],
+        product_color: product_color ? product_color.split(",") : [],
+        product_brand: product_brand ? product_brand.split(",") : [],
+        price_min,
+        price_max,
+        search: search || undefined,
+      };
+
+      const hasChanges = Object.keys(newFilters).some(
+        key => JSON.stringify(prev[key]) !== JSON.stringify(newFilters[key])
+      );
+
+      return hasChanges ? newFilters : prev;
+    });
+  }, [category, category_gender, category_sub, product_color, product_brand, price_min, price_max, search]);
+
+  const handleSidebarFilterChange = useCallback((sidebarFilters) => {
+    setSelectedFilters((prev) => {
+      // Deep compare to avoid unnecessary state updates
+      const hasChanges = Object.keys(sidebarFilters).some(
+        key => JSON.stringify(prev[key]) !== JSON.stringify(sidebarFilters[key])
+      );
+      if (hasChanges) {
+        const newFilters = { ...prev, ...sidebarFilters };
+        
+        // Update URL
+        const params = new URLSearchParams();
+        Object.entries(newFilters).forEach(([key, value]) => {
+          if (Array.isArray(value) && value.length > 0) {
+            params.set(key, value.join(","));
+          } else if (typeof value === "string" && value !== "") {
+            params.set(key, value);
+          }
+        });
+        
+        navigate({ search: params.toString() }, { replace: true });
+        return newFilters;
+      }
+      return prev;
+    });
+  }, [navigate]);
 
   useEffect(() => {
     fetchProducts(selectedFilters);
@@ -115,8 +171,6 @@ const ProductPage = () => {
 
     setSortProducts(sortedProducts);
   };
-
-  const navigate = useNavigate();
 
   const totalPages = Math.ceil(sortProducts.length / 12);
 
@@ -219,7 +273,7 @@ const ProductPage = () => {
         onClose={() => {
           setSidebarOpen(false);
         }}
-        onFilterChange={setSelectedFilters}
+        onFilterChange={handleSidebarFilterChange}
       />
       {sortProducts.length > 0 ? (
         <div className="flex justify-center mt-10">

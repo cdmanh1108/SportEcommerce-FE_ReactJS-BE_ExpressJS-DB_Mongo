@@ -244,3 +244,14 @@ export const getBestSellerProducts = async (params = {}) => {
     return error.response?.data || networkError();
   }
 };
+
+export const updateProductCategory = async (productId, categoryId) => {
+  try {
+    const res = await AxiosInstance.patch(`/product/update-category/${productId}`, {
+      product_category: categoryId,
+    });
+    return res.data;
+  } catch (error) {
+    return error.response?.data || networkError();
+  }
+};

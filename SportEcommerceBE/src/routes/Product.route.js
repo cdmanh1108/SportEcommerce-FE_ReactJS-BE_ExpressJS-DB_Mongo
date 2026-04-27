@@ -273,6 +273,12 @@ router.patch(
   identifyAdmin,
   ProductController.updateProduct,
 );
+router.patch(
+  "/update-category/:id",
+  verifyToken,
+  identifyAdmin,
+  ProductController.updateProductCategory,
+);
 /**
  * @swagger
  * /product/delete/{id}:

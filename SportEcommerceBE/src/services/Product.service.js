@@ -441,6 +441,10 @@ const getAllProduct = async (filters = {}) => {
     query.product_brand = { $in: productBrands };
   }
 
+  if (filters.search) {
+    query.product_title = { $regex: filters.search, $options: "i" };
+  }
+
   if (hasCategoryFilter && categoryObjectIds.length === 0) {
     query.product_category = { $in: [] };
   }
@@ -454,6 +458,20 @@ const getAllProduct = async (filters = {}) => {
   };
 };
 
+const updateProductCategory = async (productId, categoryId) => {
+  const updatedProductInstance = await Product.findByIdAndUpdate(
+    productId,
+    { product_category: categoryId },
+    { new: true, runValidators: true }
+  ).populate("product_category");
+
+  if (!updatedProductInstance) {
+    throw new AppError("Không tìm thấy sản phẩm hoặc cập nhật thất bại", 404, 1);
+  }
+  await invalidateHomeProductsCache();
+  return updatedProductInstance;
+};
+
 export {
   createProduct,
   updateProduct,
@@ -462,4 +480,5 @@ export {
   getHomeProducts,
   getBestSellerProducts,
   getAllProduct,
+  updateProductCategory,
 };

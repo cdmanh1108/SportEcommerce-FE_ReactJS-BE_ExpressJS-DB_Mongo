@@ -1,4 +1,4 @@
-﻿import * as productService from "../services/Product.service.js";
+import * as productService from "../services/Product.service.js";
 import Product from "../models/Product.model.js";
 import AppError from "../utils/AppError.js";
 import handleControllerError from "../utils/HandleControllerError.js";
@@ -121,6 +121,7 @@ const getAllProduct = async (req, res) => {
       price_max,
       product_color,
       product_brand,
+      search,
     } = req.query;
     const filters = {
       category,
@@ -129,6 +130,7 @@ const getAllProduct = async (req, res) => {
       price_max,
       product_color,
       product_brand,
+      search,
     };
 
     const result = await productService.getAllProduct(filters);
@@ -158,6 +160,20 @@ const getBestSellerProducts = async (req, res) => {
   }
 };
 
+const updateProductCategory = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const { product_category } = req.body;
+    if (!product_category) {
+      return res.error(1, "Vui lòng cung cấp danh mục (product_category)");
+    }
+    const result = await productService.updateProductCategory(productId, product_category);
+    return res.success(result, "Cập nhật danh mục sản phẩm thành công");
+  } catch (error) {
+    return handleControllerError(res, error);
+  }
+};
+
 export {
   createProduct,
   uploadImgProduct,
@@ -167,4 +183,5 @@ export {
   getAllProduct,
   getHomeProducts,
   getBestSellerProducts,
+  updateProductCategory,
 };

@@ -13,13 +13,22 @@ const CategoriesContext = createContext();
 export const CategoriesProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [categoryDetail, setCategoryDetail] = useState({});
+  const [isFetching, setIsFetching] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
-  const fetchCategories = async () => {
-    const response = await getAllCategory();
-    if (response?.data?.EC === 0){
-        setCategories(response?.data?.result);
+  const fetchCategories = async (force = false) => {
+    if ((hasFetched || isFetching) && !force) return { data: { EC: 0, result: categories } };
+    setIsFetching(true);
+    try {
+      const response = await getAllCategory();
+      if (response?.data?.EC === 0){
+          setCategories(response?.data?.result);
+          setHasFetched(true);
+      }
+      return response;
+    } finally {
+      setIsFetching(false);
     }
-    return response;
   };
 
   const fetchCategoryDetail = async (id) => {

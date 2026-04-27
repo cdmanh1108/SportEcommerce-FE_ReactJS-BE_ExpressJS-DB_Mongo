@@ -10,6 +10,7 @@ import {
 } from "./Payment.service.js";
 import { logActivityHistory } from "./LoginHistory.service.js";
 import AppError from "../utils/AppError.js";
+import { getIO } from "./Socket.service.js";
 
 const VALID_ORDER_STATUSES = [
   "Chờ xác nhận",
@@ -570,13 +571,26 @@ const updateStatus = async (
     const img = imageMap[role]?.[status];
 
     if (notify_desc && img) {
-      await createNotificationForUser(updatedOrder.user_id, {
+      const newNotification = await createNotificationForUser(updatedOrder.user_id, {
         notify_type: "Tình trạng đơn hàng",
         notify_title: `Đơn hàng #${updatedOrder._id} đã được cập nhật.`,
         notify_desc,
         order_id: updatedOrder._id,
         img,
       });
+
+      try {
+        const io = getIO();
+        io.to(updatedOrder.user_id.toString()).emit("newNotification", {
+          ...(newNotification.toObject ? newNotification.toObject() : newNotification),
+          notify_type: "Tình trạng đơn hàng",
+          notify_title: `Đơn hàng #${updatedOrder._id} đã được cập nhật.`,
+          notify_desc,
+          img
+        });
+      } catch (error) {
+        console.error("Socket emit error:", error);
+      }
     }
   };
 

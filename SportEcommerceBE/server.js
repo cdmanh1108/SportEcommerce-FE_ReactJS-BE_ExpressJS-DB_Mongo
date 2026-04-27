@@ -10,6 +10,8 @@ import swaggerDocs from "./src/config/Swagger.js";
 import responseHandler from "./src/middlewares/ResponseHandler.js";
 import errorHandler from "./src/middlewares/ErrorHandler.js";
 import "./src/chronos/OrderChecker.js";
+import http from "http";
+import { initSocket } from "./src/services/Socket.service.js";
 
 import dotenv from "dotenv";
 
@@ -39,8 +41,14 @@ route(app);
 // Global error handler
 app.use(errorHandler);
 
+// Create HTTP Server
+const server = http.createServer(app);
+
+// Initialize Socket.io
+initSocket(server);
+
 // Start server
-app.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log("Server is running on http://0.0.0.0:" + PORT);
 });
 

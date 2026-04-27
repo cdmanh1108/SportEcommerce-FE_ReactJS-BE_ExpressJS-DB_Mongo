@@ -57,19 +57,19 @@ const OrderDetails = () => {
   } = orderDetails;
 
   const formattedProducts = products.map((product) => {
-    const colorData = product.product_id.colors.find(
+    const colorData = product?.product_id?.colors?.find(
       (color) => color.color_name === product.color
     );
 
-    const variantData = colorData?.variants.find(
+    const variantData = colorData?.variants?.find(
       (variant) => variant.variant_size === product.variant
     );
 
     return {
-      product_id: product.product_id._id,
-      product_name: product.product_id.product_title,
-      product_img: colorData?.imgs?.img_main || product.product_id.product_img,
-      product_price: variantData.variant_price,
+      product_id: product?.product_id?._id || "N/A",
+      product_name: product?.product_id?.product_title || "Sản phẩm không tồn tại",
+      product_img: colorData?.imgs?.img_main || product?.product_id?.product_img,
+      product_price: variantData?.variant_price || 0,
       quantity: product.quantity,
       variant: `${product.color} - ${product.variant}`,
     };

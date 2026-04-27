@@ -7,6 +7,7 @@ import {
   updateProduct,
   deleteProduct,
   getDetailsProduct,
+  updateProductCategory,
 } from "../services/api/ProductApi";
 
 const ProductContext = createContext();
@@ -96,6 +97,18 @@ export const ProductProvider = ({ children }) => {
     return res;
   };
 
+  const editProductCategory = async (productId, categoryId) => {
+    const res = await updateProductCategory(productId, categoryId);
+    
+    setProducts((prev) =>
+      prev.map((product) =>
+        product?._id === productId ? res.result : product
+      )
+    );
+
+    return res;
+  };
+
   const removeProduct = async (productId) => {
     const res = await deleteProduct(productId);
     setProducts((prev) => prev.filter((p) => p._id !== productId));
@@ -120,6 +133,7 @@ export const ProductProvider = ({ children }) => {
         fetchProductDetails,
         addProduct,
         editProduct,
+        editProductCategory,
         removeProduct,
       }}
     >

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AiOutlineClose } from "react-icons/ai";
 import { Checkbox } from "@material-tailwind/react";
 import { useCategories } from "../../context/CategoriesContext";
+import { useLocation } from "react-router-dom";
 
 const SidebarSortComponent = ({ isOpen, onClose, onFilterChange }) => {
   const [filterOptions, setFilterOptions] = useState({
@@ -57,15 +58,38 @@ const SidebarSortComponent = ({ isOpen, onClose, onFilterChange }) => {
     },
   });
 
+
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const urlCategory = queryParams.get("category") || "";
+  const urlCategoryGender = queryParams.get("category_gender") || "";
+  const urlCategorySub = queryParams.get("category_sub") || "";
+  const urlColor = queryParams.get("product_color") || "";
+  const urlBrand = queryParams.get("product_brand") || "";
+  const urlPriceMin = queryParams.get("price_min") || "";
+  const urlPriceMax = queryParams.get("price_max") || "";
+
   const [selectedFilters, setSelectedFilters] = useState({
-    category_gender: [],
-    category: [],
-    category_sub: [],
-    product_color: [],
-    product_brand: [],
-    price_min: "",
-    price_max: "",
+    category_gender: urlCategoryGender ? urlCategoryGender.split(",") : [],
+    category: urlCategory ? urlCategory.split(",") : [],
+    category_sub: urlCategorySub ? urlCategorySub.split(",") : [],
+    product_color: urlColor ? urlColor.split(",") : [],
+    product_brand: urlBrand ? urlBrand.split(",") : [],
+    price_min: urlPriceMin,
+    price_max: urlPriceMax,
   });
+
+  useEffect(() => {
+    setSelectedFilters({
+      category_gender: urlCategoryGender ? urlCategoryGender.split(",") : [],
+      category: urlCategory ? urlCategory.split(",") : [],
+      category_sub: urlCategorySub ? urlCategorySub.split(",") : [],
+      product_color: urlColor ? urlColor.split(",") : [],
+      product_brand: urlBrand ? urlBrand.split(",") : [],
+      price_min: urlPriceMin,
+      price_max: urlPriceMax,
+    });
+  }, [urlCategory, urlCategoryGender, urlCategorySub, urlColor, urlBrand, urlPriceMin, urlPriceMax]);
 
   const [priceCheckTimeout, setPriceCheckTimeout] = useState(null);
   const [categorySubOptions, setCategorySubOptions] = useState([]);
